@@ -176,6 +176,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
     }
 
     /**
+	 * 将hostPortPair中的addr和port分开，保存在string数组splitValues中
      * Parses hostPortPair in the form of [host][:port] into an array, with the
      * element of index HOST_NAME_INDEX being the host (or null if not
      * specified), and the element of index PORT_NUMBER_INDEX being the port (or
@@ -189,11 +190,11 @@ public class NonRegisteringDriver implements java.sql.Driver {
      * @throws SQLException
      *             if a parse error occurs
      */
-    protected static String[] parseHostPortPair(String hostPortPair) throws SQLException {
+    protected static String[] parseHostPortPair(String hostPortPair) throws SQLException {	/* */
 
         String[] splitValues = new String[2];
 
-        if (StringUtils.startsWithIgnoreCaseAndWs(hostPortPair, "address")) {
+        if (StringUtils.startsWithIgnoreCaseAndWs(hostPortPair, "address")) {	/*判断是否是address开头,这种情况下没有port */
             splitValues[HOST_NAME_INDEX] = hostPortPair.trim();
             splitValues[PORT_NUMBER_INDEX] = null;
 
@@ -598,6 +599,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
         return false;
     }
 
+	/* */
     public Properties parseURL(String url, Properties defaults) throws java.sql.SQLException {
         Properties urlProps = (defaults != null) ? new Properties(defaults) : new Properties();
 
@@ -605,6 +607,10 @@ public class NonRegisteringDriver implements java.sql.Driver {
             return null;
         }
 
+		/* 检测有效性 规则 jdbc:mysql:// or jdbc:mysql:mxj:// or jdbc:mysql:loadbalance:// or jdbc:mysql:replication://
+		   loadbalance用于mysql使用master-master模式的时候，将写读均匀分布到多台机器上
+		   replication用于mysql使用master-slave模式的时候，将读写分别分布到master和slave上
+		   mxj TODO  */
         if (!StringUtils.startsWithIgnoreCase(url, URL_PREFIX) && !StringUtils.startsWithIgnoreCase(url, MXJ_URL_PREFIX)
                 && !StringUtils.startsWithIgnoreCase(url, LOADBALANCE_URL_PREFIX) && !StringUtils.startsWithIgnoreCase(url, REPLICATION_URL_PREFIX)) {
 
@@ -613,6 +619,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
 
         int beginningOfSlashes = url.indexOf("//");
 
+		/* mxj TODO */
         if (StringUtils.startsWithIgnoreCase(url, MXJ_URL_PREFIX)) {
 
             urlProps.setProperty("socketFactory", "com.mysql.management.driverlaunched.ServerLauncherSocketFactory");
@@ -621,6 +628,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
         /*
          * Parse parameters after the ? in the URL and remove them from the
          * original URL.
+		 * 将'?'后面的kV对提取出来，然后保存在urlProps中
          */
         int index = url.indexOf("?");
 
@@ -670,7 +678,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
             hostStuff = url.substring(0, slashIndex);
 
             if ((slashIndex + 1) < url.length()) {
-                urlProps.put(DBNAME_PROPERTY_KEY, url.substring((slashIndex + 1), url.length()));
+                urlProps.put(DBNAME_PROPERTY_KEY, url.substring((slashIndex + 1), url.length()));	/* 将dbname放入 */
             }
         } else {
             hostStuff = url;
@@ -705,6 +713,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
         }
 
         urlProps.setProperty(NUM_HOSTS_PROPERTY_KEY, String.valueOf(numHosts));
+		/* TODO */
         urlProps.setProperty(HOST_PROPERTY_KEY, urlProps.getProperty(HOST_PROPERTY_KEY + ".1"));
         urlProps.setProperty(PORT_PROPERTY_KEY, urlProps.getProperty(PORT_PROPERTY_KEY + ".1"));
 
@@ -727,6 +736,7 @@ public class NonRegisteringDriver implements java.sql.Driver {
             }
         }
 
+		/* TODO coldfusio不清楚 */
         if (Util.isColdFusion() && urlProps.getProperty("autoConfigureForColdFusion", "true").equalsIgnoreCase("true")) {
             String configs = urlProps.getProperty(USE_CONFIG_PROPERTY_KEY);
 

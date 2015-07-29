@@ -27,7 +27,7 @@ import java.lang.ref.Reference;
 
 import com.mysql.jdbc.NonRegisteringDriver.ConnectionPhantomReference;
 
-public class AbandonedConnectionCleanupThread extends Thread {
+public class AbandonedConnectionCleanupThread extends Thread {	/* 在NonRegisteringDriver的static代码中初始化并start */
     private static boolean running = true;
     private static Thread threadRef = null;
 
